@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ร้านไก่อบโอง — ระบบจัดการ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --brown: #4A2C0A;
+  --brown-mid: #7C4A1A;
+  --orange: #E8650A;
+  --orange-light: #F5943A;
+  --cream: #FDF6EE;
+  --cream-dark: #F5EAD8;
+  --gold: #C9882A;
+  --gold-light: #F0C060;
+  --smoke: #F9F5F0;
+  --text: #2A1A08;
+  --text-mid: #6B4C2A;
+  --text-light: #A07840;
+  --border: #E8D5B8;
+  --border-light: #F0E4CC;
+  --success: #2E7D32;
+  --success-bg: #E8F5E9;
+  --danger: #C62828;
+  --danger-bg: #FFEBEE;
+  --warning: #E65100;
+  --warning-bg: #FFF3E0;
+  --sidebar-w: 230px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Sarabun', sans-serif;
+  background: var(--smoke);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar-w);
+  background: var(--brown);
+  min-height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  display: flex; flex-direction: column;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-logo .icon { font-size: 32px; margin-bottom: 6px; }
+.sidebar-logo h1 { color: #fff; font-size: 16px; font-weight: 700; line-height: 1.3; }
+.sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 300; margin-top: 2px; }
+.sidebar-nav { padding: 16px 0; flex: 1; }
+.nav-label {
+  color: rgba(255,255,255,0.35);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 1.2px; text-transform: uppercase;
+  padding: 8px 20px 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px;
+  color: rgba(255,255,255,0.65);
+  font-size: 14px; font-weight: 400;
+  cursor: pointer;
+  transition: all .15s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
+.nav-item.active {
+  color: #fff;
+  background: rgba(232,101,10,0.25);
+  border-left-color: var(--orange);
+  font-weight: 600;
+}
+.nav-item .ico { font-size: 18px; width: 22px; text-align: center; }
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+}
+
+/* ── Main ── */
+.main {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+}
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.topbar-date { font-size: 13px; color: var(--text-light); }
+.content { padding: 28px; flex: 1; }
+
+/* ── Pages ── */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── Cards ── */
+.card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+.card-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-mid);
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  margin-bottom: 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Grid ── */
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+.grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+
+/* ── Metric cards ── */
+.metric {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.metric-label { font-size: 12px; color: var(--text-light); font-weight: 500; margin-bottom: 8px; }
+.metric-value { font-size: 26px; font-weight: 700; color: var(--text); line-height: 1; }
+.metric-sub { font-size: 12px; color: var(--text-light); margin-top: 6px; }
+.metric-badge {
+  display: inline-block; padding: 2px 8px;
+  border-radius: 20px; font-size: 11px; font-weight: 600;
+  margin-top: 4px;
+}
+.badge-up { background: var(--success-bg); color: var(--success); }
+.badge-down { background: var(--danger-bg); color: var(--danger); }
+.badge-neutral { background: var(--warning-bg); color: var(--warning); }
+
+/* ── Forms ── */
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 500; color: var(--text-mid); margin-bottom: 6px; }
+.form-input, .form-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  font-size: 14px;
+  font-family: 'Sarabun', sans-serif;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  transition: border-color .15s;
+}
+.form-input:focus, .form-select:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgba(232,101,10,.1); }
+.form-hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ── Table ── */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th {
+  background: var(--cream);
+  color: var(--text-mid);
+  font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .5px;
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text);
+}
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--cream); }
+.td-right { text-align: right; font-variant-numeric: tabular-nums; }
+.td-center { text-align: center; }
+.tbl-total td { font-weight: 700; background: var(--cream-dark); border-top: 2px solid var(--border); }
+
+/* ── Buttons ── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  font-family: 'Sarabun', sans-serif;
+  cursor: pointer; border: none;
+  transition: all .15s;
+}
+.btn-primary { background: var(--orange); color: #fff; }
+.btn-primary:hover { background: var(--brown-mid); }
+.btn-secondary { background: var(--cream); color: var(--text-mid); border: 1px solid var(--border); }
+.btn-secondary:hover { background: var(--cream-dark); }
+.btn-sm { padding: 6px 12px; font-size: 12px; }
+
+/* ── Section header ── */
+.section-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 16px;
+}
+.section-hdr h2 { font-size: 17px; font-weight: 700; color: var(--text); }
+.section-hdr p { font-size: 13px; color: var(--text-light); }
+
+/* ── Input highlight ── */
+.inp-blue { color: #1565C0; font-weight: 500; }
+.calc-row { background: var(--success-bg); }
+.calc-row td { color: var(--success); font-weight: 600; }
+
+/* ── Progress bar ── */
+.progress-bar { background: var(--border-light); border-radius: 99px; height: 8px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; border-radius: 99px; background: var(--orange); transition: width .4s; }
+
+/* ── Alert ── */
+.alert {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  display: flex; align-items: flex-start; gap: 10px;
+  margin-bottom: 16px;
+}
+.alert-info { background: #E3F2FD; color: #0D47A1; border-left: 4px solid #1976D2; }
+.alert-success { background: var(--success-bg); color: var(--success); border-left: 4px solid var(--success); }
+.alert-warning { background: var(--warning-bg); color: var(--warning); border-left: 4px solid var(--warning); }
+
+/* ── Chart ── */
+.chart-wrap { position: relative; width: 100%; }
+
+/* ── Dashboard breakdown list ── */
+.breakdown-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 13px;
+}
+.breakdown-item:last-child { border-bottom: none; }
+.breakdown-label { color: var(--text-mid); }
+.breakdown-val { font-weight: 600; color: var(--text); }
+.breakdown-bar { flex: 1; margin: 0 12px; }
+
+/* ── Divider ── */
+.divider { height: 1px; background: var(--border-light); margin: 20px 0; }
+
+/* ── PL row ── */
+.pl-row { display: flex; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border-light); font-size: 14px; }
+.pl-row.pl-total { font-weight: 700; border-top: 2px solid var(--border); border-bottom: none; padding-top: 12px; margin-top: 4px; }
+.pl-row.pl-section { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: .8px; padding-top: 16px; padding-bottom: 4px; border-bottom: none; }
+.pl-positive { color: var(--success); }
+.pl-negative { color: var(--danger); }
+.pl-indent { padding-left: 16px; color: var(--text-mid); }
+
+/* ── Gap ── */
+.gap-16 { margin-bottom: 16px; }
+.gap-24 { margin-bottom: 24px; }
+.gap-8 { margin-bottom: 8px; }
+
+/* ── Orange accent ── */
+.orange-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--orange); }
+
+/* ── Day indicator ── */
+.day-chip {
+  display: inline-block; width: 32px; height: 32px; border-radius: 50%;
+  text-align: center; line-height: 32px;
+  font-size: 12px; font-weight: 600;
+  background: var(--cream); color: var(--text-mid); border: 1px solid var(--border);
+  cursor: pointer; transition: all .1s;
+}
+.day-chip.has-data { background: rgba(232,101,10,.12); color: var(--orange); border-color: rgba(232,101,10,.3); }
+.day-chip.today { background: var(--orange); color: #fff; border-color: var(--orange); }
+
+/* ── Top orange bar ── */
+.orange-bar {
+  background: linear-gradient(135deg, var(--brown) 0%, var(--brown-mid) 100%);
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  color: #fff;
+  margin-bottom: 24px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.orange-bar h2 { font-size: 22px; font-weight: 700; }
+.orange-bar p { font-size: 13px; opacity: .65; margin-top: 4px; }
+.orange-bar .big-num { font-size: 36px; font-weight: 700; color: var(--gold-light); }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ── -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">🐔</div>
+    <h1>ร้านไก่อบโอง</h1>
+    <p>ระบบบัญชีและต้นทุน</p>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">หลัก</div>
+    <div class="nav-item active" onclick="goto('dashboard',this)">
+      <span class="ico">📊</span> แดชบอร์ด
+    </div>
+    <div class="nav-item" onclick="goto('cost',this)">
+      <span class="ico">💰</span> ต้นทุน & วัตถุดิบ
+    </div>
+    <div class="nav-item" onclick="goto('order',this)">
+      <span class="ico">🛒</span> รายการสั่งซื้อ
+    </div>
+    <div class="nav-item" onclick="goto('sales',this)">
+      <span class="ico">📋</span> บันทึกยอดขาย
+    </div>
+    <div class="nav-label">สรุป</div>
+    <div class="nav-item" onclick="goto('pl',this)">
+      <span class="ico">📈</span> กำไร-ขาดทุน
+    </div>
+  </nav>
+  <div class="sidebar-footer">v1.0 · ร้านไก่อบโอง</div>
+</aside>
+
+<!-- ── MAIN ── -->
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="topbar-title">แดชบอร์ด</span>
+    <span class="topbar-date" id="topbar-date"></span>
+  </div>
+  <div class="content">
+
+    <!-- ════════ PAGE: DASHBOARD ════════ -->
+    <div class="page active" id="page-dashboard">
+      <div class="orange-bar">
+        <div>
+          <h2>ยินดีต้อนรับ 🎉</h2>
+          <p id="dash-date-str">สรุปผลประจำเดือน</p>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;opacity:.6;margin-bottom:4px">กำไรสุทธิเดือนนี้ (บาท)</div>
+          <div class="big-num" id="dash-net-profit">—</div>
+        </div>
+      </div>
+
+      <div class="grid-4 gap-24">
+        <div class="metric">
+          <div class="metric-label">ยอดขายรวม (บาท)</div>
+          <div class="metric-value" id="d-revenue">—</div>
+          <div class="metric-sub">ทั้งเดือน</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">ต้นทุนรวม (บาท)</div>
+          <div class="metric-value" id="d-cost">—</div>
+          <div class="metric-sub">วัตถุดิบ + ทางอ้อม</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">ไก่ขายได้ (ตัว)</div>
+          <div class="metric-value" id="d-chicken-sold">—</div>
+          <div class="metric-sub">ทั้งเดือน</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">อัตรากำไรขั้นต้น</div>
+          <div class="metric-value" id="d-gpm">—</div>
+          <div class="metric-sub">Gross margin</div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;" class="grid-2-1">
+        <div class="card">
+          <div class="card-title">📈 ยอดขาย & กำไรรายวัน (บาท)</div>
+          <div class="chart-wrap" style="height:240px">
+            <canvas id="chartSales" role="img" aria-label="กราฟยอดขายรายวัน">กราฟยอดขายและกำไรรายวัน</canvas>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:12px;font-size:12px;color:var(--text-light)">
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#E8650A;display:inline-block"></span>ยอดขาย</span>
+            <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#2E7D32;display:inline-block"></span>กำไร</span>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🥧 สัดส่วนต้นทุน</div>
+          <div class="chart-wrap" style="height:180px">
+            <canvas id="chartCost" role="img" aria-label="กราฟสัดส่วนต้นทุน">สัดส่วนต้นทุนวัตถุดิบและทางอ้อม</canvas>
+          </div>
+          <div id="cost-legend" style="margin-top:10px;font-size:12px;color:var(--text-light)"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;" class="grid-3">
+        <div class="card">
+          <div class="card-title">📦 ต้นทุนต่อตัว</div>
+          <div id="dash-breakdown"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">🎯 เป้าหมาย & ผลจริง</div>
+          <div id="dash-goals"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ คำแนะนำ</div>
+          <div id="dash-tips"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ PAGE: COST ════════ -->
+    <div class="page" id="page-cost">
+      <div class="section-hdr gap-24">
+        <div><h2>ต้นทุนวัตถุดิบ</h2><p>กำหนดปริมาณการผลิตและราคาวัตถุดิบ</p></div>
+        <button class="btn btn-primary" onclick="recalcAll()">🔄 คำนวณใหม่</button>
+      </div>
+
+      <div class="grid-3 gap-24">
+        <div class="card">
+          <div class="card-title">⚙️ ปริมาณการผลิต</div>
+          <div class="form-group">
+            <label class="form-label">จำนวนไก่ต่อโอง (ตัว)</label>
+            <input class="form-input inp-blue" id="c-perRound" type="number" value="8" min="1" oninput="recalcAll()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">จำนวนรอบต่อวัน (รอบ)</label>
+            <input class="form-input inp-blue" id="c-rounds" type="number" value="3" min="1" oninput="recalcAll()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">อัตรากำไรที่ต้องการ (%)</label>
+            <input class="form-input inp-blue" id="c-margin" type="number" value="35" min="0" max="200" oninput="recalcAll()">
+          </div>
+          <div style="background:var(--cream-dark);border-radius:var(--radius-sm);padding:14px;margin-top:8px">
+            <div style="font-size:12px;color:var(--text-light);margin-bottom:4px">ไก่ทั้งหมดต่อวัน</div>
+            <div style="font-size:24px;font-weight:700;color:var(--orange)" id="c-totalPerDay">24 ตัว</div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 2">
+          <div class="card-title">🧮 สรุปต้นทุนและราคาขาย</div>
+          <div class="grid-2">
+            <div>
+              <div class="pl-row pl-section">ต้นทุน</div>
+              <div class="pl-row pl-indent"><span>วัตถุดิบต่อตัว</span><span id="s-mat">—</span></div>
+              <div class="pl-row pl-indent"><span>ทางอ้อมต่อตัว</span><span id="s-ovh">—</span></div>
+              <div class="pl-row pl-total"><span>ต้นทุนรวม/ตัว</span><span id="s-totalCost">—</span></div>
+            </div>
+            <div>
+              <div class="pl-row pl-section">ราคาและกำไร</div>
+              <div class="pl-row pl-indent"><span>ราคาขายแนะนำ/ตัว</span><span id="s-price" style="color:var(--orange);font-weight:600">—</span></div>
+              <div class="pl-row pl-indent"><span>กำไร/ตัว</span><span id="s-profitPerUnit" class="pl-positive">—</span></div>
+              <div class="pl-row pl-total"><span>กำไรต่อวัน</span><span id="s-profitPerDay" class="pl-positive">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2 gap-16" style="margin-top:0">
+        <div class="card">
+          <div class="card-title">🥩 วัตถุดิบต่อตัว</div>
+          <div class="alert alert-info">ตัวหนังสือสีน้ำเงิน = แก้ไขได้ | ตัวหนังสือสีดำ = คำนวณอัตโนมัติ</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>วัตถุดิบ</th><th>ปริมาณ/ตัว</th><th>หน่วย</th><th>ราคา/หน่วย</th><th class="td-right">ต้นทุน/ตัว</th></tr></thead>
+              <tbody id="tbl-ingredients"></tbody>
+              <tfoot><tr class="tbl-total"><td colspan="4">รวมต้นทุนวัตถุดิบ/ตัว</td><td class="td-right" id="mat-total">—</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">🏭 ต้นทุนทางอ้อม (ต่อวัน)</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>รายการ</th><th class="td-right">บาท/วัน</th><th class="td-right">บาท/ตัว</th></tr></thead>
+              <tbody id="tbl-overhead"></tbody>
+              <tfoot><tr class="tbl-total"><td>รวม</td><td class="td-right" id="ovh-total-day">—</td><td class="td-right" id="ovh-total-unit">—</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ PAGE: ORDER ════════ -->
+    <div class="page" id="page-order">
+      <div class="section-hdr gap-24">
+        <div><h2>รายการสั่งซื้อวัตถุดิบ</h2><p>คำนวณปริมาณสั่งซื้ออัตโนมัติ</p></div>
+      </div>
+
+      <div class="grid-3 gap-24">
+        <div class="card">
+          <div class="card-title">⚙️ ตั้งค่าการสั่งซื้อ</div>
+          <div class="form-group">
+            <label class="form-label">จำนวนวันที่ต้องการสั่ง</label>
+            <input class="form-input inp-blue" id="o-days" type="number" value="7" min="1" oninput="recalcOrder()">
+            <div class="form-hint">เช่น 7 = สั่งทุกสัปดาห์</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">เผื่อสต็อก (%)</label>
+            <input class="form-input inp-blue" id="o-buffer" type="number" value="10" min="0" oninput="recalcOrder()">
+          </div>
+          <div style="background:var(--cream-dark);border-radius:var(--radius-sm);padding:14px;margin-top:8px">
+            <div style="font-size:12px;color:var(--text-light);margin-bottom:4px">งบประมาณสั่งซื้อรวม (บาท)</div>
+            <div style="font-size:24px;font-weight:700;color:var(--orange)" id="o-totalBudget">—</div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:span 2">
+          <div class="card-title">🛒 ตารางสั่งซื้อวัตถุดิบ</div>
+          <div class="tbl-wrap">
+            <table>
+              <thead><tr><th>วัตถุดิบ</th><th>หน่วย</th><th class="td-right">ต่อตัว</th><th class="td-right">ต่อวัน</th><th class="td-right">ต่อรอบ</th><th class="td-right">+เผื่อ</th><th class="td-right">ราคา/หน่วย</th><th class="td-right">รวม (บาท)</th></tr></thead>
+              <tbody id="tbl-order"></tbody>
+              <tfoot><tr class="tbl-total"><td colspan="7">งบสั่งซื้อรวม</td><td class="td-right" id="o-grand">—</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ PAGE: SALES ════════ -->
+    <div class="page" id="page-sales">
+      <div class="section-hdr gap-24">
+        <div><h2>บันทึกยอดขายรายวัน</h2><p>กรอกจำนวนไก่ที่ขายได้ในแต่ละวัน</p></div>
+        <div style="display:flex;gap:8px">
+          <select class="form-select" id="s-month" style="width:auto" onchange="buildSalesTable()">
+            <option value="0">มกราคม</option><option value="1">กุมภาพันธ์</option>
+            <option value="2">มีนาคม</option><option value="3">เมษายน</option>
+            <option value="4">พฤษภาคม</option><option value="5">มิถุนายน</option>
+            <option value="6">กรกฎาคม</option><option value="7">สิงหาคม</option>
+            <option value="8">กันยายน</option><option value="9">ตุลาคม</option>
+            <option value="10">พฤศจิกายน</option><option value="11">ธันวาคม</option>
+          </select>
+          <select class="form-select" id="s-year" style="width:auto" onchange="buildSalesTable()"></select>
+        </div>
+      </div>
+
+      <div class="grid-4 gap-24">
+        <div class="metric"><div class="metric-label">ยอดขายรวม</div><div class="metric-value" id="sm-rev">—</div></div>
+        <div class="metric"><div class="metric-label">ต้นทุนรวม</div><div class="metric-value" id="sm-cost">—</div></div>
+        <div class="metric"><div class="metric-label">กำไรขั้นต้น</div><div class="metric-value" id="sm-gp">—</div></div>
+        <div class="metric"><div class="metric-label">% กำไรเฉลี่ย</div><div class="metric-value" id="sm-gpm">—</div></div>
+      </div>
+
+      <div class="card" style="margin-top:16px">
+        <div class="card-title">📋 ตารางยอดขายรายวัน</div>
+        <div class="tbl-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th class="td-center">ไก่ทั้งตัว<br><small style="font-weight:400;text-transform:none">(ตัว)</small></th>
+                <th class="td-center">ไก่ครึ่งตัว<br><small style="font-weight:400;text-transform:none">(ชิ้น)</small></th>
+                <th class="td-center">อื่นๆ<br><small style="font-weight:400;text-transform:none">(ชิ้น)</small></th>
+                <th class="td-right">ยอดขาย (บาท)</th>
+                <th class="td-right">ต้นทุน (บาท)</th>
+                <th class="td-right">กำไร (บาท)</th>
+                <th class="td-right">% กำไร</th>
+              </tr>
+            </thead>
+            <tbody id="tbl-sales"></tbody>
+            <tfoot>
+              <tr class="tbl-total">
+                <td colspan="4">รวมทั้งเดือน</td>
+                <td class="td-right" id="st-rev">—</td>
+                <td class="td-right" id="st-cost">—</td>
+                <td class="td-right" id="st-gp">—</td>
+                <td class="td-right" id="st-gpm">—</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════ PAGE: P&L ════════ -->
+    <div class="page" id="page-pl">
+      <div class="section-hdr gap-24">
+        <div><h2>สรุปกำไร-ขาดทุน (P&L)</h2><p>รายงานสรุปผลประกอบการ</p></div>
+      </div>
+
+      <div class="grid-2-1">
+        <div>
+          <div class="card gap-24">
+            <div class="card-title">📊 งบกำไรขาดทุน</div>
+
+            <div class="pl-row pl-section">รายได้ (Revenue)</div>
+            <div class="pl-row"><span>ยอดขายรวม</span><span id="pl-revenue">—</span></div>
+
+            <div class="pl-row pl-section">ต้นทุนขาย (Cost of Goods Sold)</div>
+            <div class="pl-row pl-indent"><span>ต้นทุนวัตถุดิบ</span><span id="pl-mat">—</span></div>
+            <div class="pl-row pl-indent"><span>ต้นทุนทางอ้อม</span><span id="pl-ovh">—</span></div>
+            <div class="pl-row pl-total"><span>รวมต้นทุน</span><span id="pl-totalCost" class="pl-negative">—</span></div>
+
+            <div class="divider" style="margin:8px 0"></div>
+            <div class="pl-row pl-total" style="font-size:16px"><span>กำไรขั้นต้น (Gross Profit)</span><span id="pl-gp" class="pl-positive">—</span></div>
+            <div class="pl-row"><span style="color:var(--text-light);font-size:13px">Gross Margin</span><span id="pl-gpm" style="color:var(--text-light)">—</span></div>
+
+            <div class="pl-row pl-section">ค่าใช้จ่ายเพิ่มเติม</div>
+            <div class="pl-row pl-indent">
+              <span>ภาษี / ค่าธรรมเนียม</span>
+              <span><input type="number" class="form-input inp-blue" id="pl-extra1" value="0" style="width:100px;display:inline-block;padding:4px 8px" oninput="recalcPL()"> บาท/เดือน</span>
+            </div>
+            <div class="pl-row pl-indent">
+              <span>ค่าการตลาด</span>
+              <span><input type="number" class="form-input inp-blue" id="pl-extra2" value="0" style="width:100px;display:inline-block;padding:4px 8px" oninput="recalcPL()"> บาท/เดือน</span>
+            </div>
+
+            <div class="divider" style="margin:8px 0"></div>
+            <div class="pl-row pl-total" style="font-size:17px;color:var(--orange)">
+              <span>กำไรสุทธิ (Net Profit)</span>
+              <span id="pl-np">—</span>
+            </div>
+            <div class="pl-row"><span style="color:var(--text-light);font-size:13px">Net Margin</span><span id="pl-npm" style="color:var(--text-light)">—</span></div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div class="metric">
+            <div class="metric-label">กำไรสุทธิต่อวัน (เฉลี่ย)</div>
+            <div class="metric-value" id="pl-daily">—</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">ต้นทุน Break-even</div>
+            <div class="metric-value" id="pl-be">—</div>
+            <div class="metric-sub">ตัว/วัน ที่ต้องขายเพื่อคุ้มทุน</div>
+          </div>
+          <div class="card">
+            <div class="card-title">📉 กำไรสุทธิ vs เป้า</div>
+            <div class="chart-wrap" style="height:160px">
+              <canvas id="chartPL" role="img" aria-label="กราฟเปรียบเทียบกำไร">กราฟเปรียบเทียบกำไร</canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════
+
+const ingredients = [
+  { name:'ไก่สด (ทั้งตัว)', qty:1, unit:'ตัว', price:120 },
+  { name:'เกลือ', qty:15, unit:'กรัม', price:0.02 },
+  { name:'กระเทียม', qty:30, unit:'กรัม', price:0.15 },
+  { name:'พริกไทยดำ', qty:5, unit:'กรัม', price:0.80 },
+  { name:'ซอสปรุงรส', qty:20, unit:'มล.', price:0.05 },
+  { name:'น้ำผึ้ง / น้ำตาล', qty:10, unit:'กรัม', price:0.10 },
+  { name:'ถ่านไม้ / ฟืน', qty:1, unit:'กก.', price:8 },
+  { name:'ถุง / กล่องใส่', qty:1, unit:'ชิ้น', price:3 },
+  { name:'ไม้เสียบ / เชือก', qty:1, unit:'ชุด', price:2 },
+  { name:'อื่นๆ (สมุนไพร ฯลฯ)', qty:1, unit:'ชุด', price:5 },
+];
+
+const overheads = [
+  { name:'ค่าเช่าที่ / ค่าแผง', daily:200 },
+  { name:'ค่าแรงงาน (รวม)', daily:400 },
+  { name:'ค่าไฟฟ้า / น้ำ', daily:50 },
+  { name:'ค่าขนส่ง / น้ำมัน', daily:80 },
+  { name:'ค่าเสื่อมราคาอุปกรณ์', daily:30 },
+  { name:'อื่นๆ', daily:50 },
+];
+
+let salesData = {}; // { 'YYYY-M-D': {whole, half, other} }
+
+const fmt = n => Math.round(n).toLocaleString('th-TH');
+const fmtDec = (n,d=2) => Number(n).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const pct = n => (n*100).toFixed(1)+'%';
+
+// ══════════════════════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════════════════════
+const pageTitles = {
+  dashboard:'แดชบอร์ด', cost:'ต้นทุนวัตถุดิบ',
+  order:'รายการสั่งซื้อ', sales:'บันทึกยอดขาย', pl:'กำไร-ขาดทุน'
+};
+function goto(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbar-title').textContent = pageTitles[id];
+  if(id==='dashboard') renderDashboard();
+  if(id==='order') recalcOrder();
+  if(id==='pl') recalcPL();
+}
+
+// ══════════════════════════════════════════════════════
+// COST PAGE
+// ══════════════════════════════════════════════════════
+function getVals() {
+  const perRound = +document.getElementById('c-perRound').value||0;
+  const rounds   = +document.getElementById('c-rounds').value||0;
+  const margin   = +document.getElementById('c-margin').value||0;
+  const perDay   = perRound * rounds;
+  return { perRound, rounds, margin, perDay };
+}
+function getIngredientData() {
+  return ingredients.map((ing, i) => {
+    const q = +document.querySelector(`.ing-qty[data-i="${i}"]`)?.value ?? ing.qty;
+    const p = +document.querySelector(`.ing-price[data-i="${i}"]`)?.value ?? ing.price;
+    return {...ing, qty: q, price: p, cost: q*p};
+  });
+}
+function getOverheadData() {
+  return overheads.map((o,i)=>{
+    const d = +document.querySelector(`.ovh-daily[data-i="${i}"]`)?.value ?? o.daily;
+    return {...o, daily:d};
+  });
+}
+function buildCostTable() {
+  const tbody = document.getElementById('tbl-ingredients');
+  tbody.innerHTML = ingredients.map((ing,i)=>`
+    <tr>
+      <td>${ing.name}</td>
+      <td><input class="form-input inp-blue ing-qty" data-i="${i}" type="number" value="${ing.qty}" style="width:80px;padding:4px 8px" oninput="recalcAll()"></td>
+      <td>${ing.unit}</td>
+      <td><input class="form-input inp-blue ing-price" data-i="${i}" type="number" value="${ing.price}" step="0.01" style="width:90px;padding:4px 8px" oninput="recalcAll()"></td>
+      <td class="td-right ing-cost-cell" data-i="${i}">—</td>
+    </tr>`).join('');
+
+  const otbody = document.getElementById('tbl-overhead');
+  otbody.innerHTML = overheads.map((o,i)=>`
+    <tr>
+      <td>${o.name}</td>
+      <td class="td-right"><input class="form-input inp-blue ovh-daily" data-i="${i}" type="number" value="${o.daily}" style="width:100px;padding:4px 8px" oninput="recalcAll()"></td>
+      <td class="td-right ovh-unit-cell" data-i="${i}">—</td>
+    </tr>`).join('');
+  recalcAll();
+}
+
+function recalcAll() {
+  const {perDay, margin} = getVals();
+  const ings = getIngredientData();
+  const ovhs = getOverheadData();
+
+  const matTotal = ings.reduce((s,i)=>s+i.cost, 0);
+  const ovhDayTotal = ovhs.reduce((s,o)=>s+o.daily, 0);
+  const ovhUnit = perDay>0 ? ovhDayTotal/perDay : 0;
+  const totalCost = matTotal + ovhUnit;
+  const salePrice = totalCost * (1 + margin/100);
+  const profitUnit = salePrice - totalCost;
+  const profitDay = profitUnit * perDay;
+
+  document.getElementById('c-totalPerDay').textContent = (getVals().perDay)+' ตัว';
+
+  ings.forEach((ing,i)=>{
+    const el = document.querySelector(`.ing-cost-cell[data-i="${i}"]`);
+    if(el) el.textContent = fmtDec(ing.cost)+' บาท';
+  });
+  ovhs.forEach((o,i)=>{
+    const el = document.querySelector(`.ovh-unit-cell[data-i="${i}"]`);
+    if(el) el.textContent = fmtDec(perDay>0?o.daily/perDay:0)+' บาท';
+  });
+
+  document.getElementById('mat-total').textContent = fmtDec(matTotal)+' บาท';
+  document.getElementById('ovh-total-day').textContent = fmtDec(ovhDayTotal)+' บาท';
+  document.getElementById('ovh-total-unit').textContent = fmtDec(ovhUnit)+' บาท';
+  document.getElementById('s-mat').textContent = fmtDec(matTotal)+' บาท';
+  document.getElementById('s-ovh').textContent = fmtDec(ovhUnit)+' บาท';
+  document.getElementById('s-totalCost').textContent = fmtDec(totalCost)+' บาท';
+  document.getElementById('s-price').textContent = fmtDec(salePrice)+' บาท';
+  document.getElementById('s-profitPerUnit').textContent = fmtDec(profitUnit)+' บาท';
+  document.getElementById('s-profitPerDay').textContent = fmt(profitDay)+' บาท';
+}
+
+function getComputedCosts() {
+  const {perDay, margin} = getVals();
+  const ings = getIngredientData();
+  const ovhs = getOverheadData();
+  const matTotal = ings.reduce((s,i)=>s+i.cost, 0);
+  const ovhDayTotal = ovhs.reduce((s,o)=>s+o.daily, 0);
+  const ovhUnit = perDay>0 ? ovhDayTotal/perDay : 0;
+  const totalCostUnit = matTotal + ovhUnit;
+  const salePrice = totalCostUnit * (1 + margin/100);
+  return { matTotal, ovhDayTotal, ovhUnit, totalCostUnit, salePrice, perDay };
+}
+
+// ══════════════════════════════════════════════════════
+// ORDER PAGE
+// ══════════════════════════════════════════════════════
+function recalcOrder() {
+  const days   = +document.getElementById('o-days').value||7;
+  const buffer = +document.getElementById('o-buffer').value||0;
+  const {perDay} = getVals();
+  const ings = getIngredientData();
+
+  const tbody = document.getElementById('tbl-order');
+  let grandTotal = 0;
+  tbody.innerHTML = ings.map(ing=>{
+    const perDayQty = ing.qty * perDay;
+    const perPeriod = perDayQty * days;
+    const withBuffer = perPeriod * (1 + buffer/100);
+    const rowCost = withBuffer * ing.price;
+    grandTotal += rowCost;
+    return `<tr>
+      <td>${ing.name}</td>
+      <td>${ing.unit}</td>
+      <td class="td-right">${fmtDec(ing.qty)}</td>
+      <td class="td-right">${fmtDec(perDayQty)}</td>
+      <td class="td-right">${fmtDec(perPeriod)}</td>
+      <td class="td-right" style="color:var(--orange);font-weight:600">${fmtDec(withBuffer)}</td>
+      <td class="td-right">${fmtDec(ing.price)}</td>
+      <td class="td-right">${fmt(rowCost)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('o-grand').textContent = fmt(grandTotal)+' บาท';
+  document.getElementById('o-totalBudget').textContent = fmt(grandTotal)+' บาท';
+}
+
+// ══════════════════════════════════════════════════════
+// SALES PAGE
+// ══════════════════════════════════════════════════════
+function daysInMonth(y,m){ return new Date(y,m+1,0).getDate(); }
+function salesKey(y,m,d){ return `${y}-${m}-${d}`; }
+
+function buildSalesTable() {
+  const m = +document.getElementById('s-month').value;
+  const y = +document.getElementById('s-year').value;
+  const today = new Date();
+  const days = daysInMonth(y,m);
+  const {salePrice, totalCostUnit} = getComputedCosts();
+
+  const tbody = document.getElementById('tbl-sales');
+  let rows = '';
+  for(let d=1;d<=days;d++){
+    const key = salesKey(y,m,d);
+    const saved = salesData[key]||{whole:0,half:0,other:0};
+    const isToday = (today.getFullYear()===y && today.getMonth()===m && today.getDate()===d);
+    const dateStr = `${d}/${m+1}/${y}`;
+    rows += `<tr id="srow-${d}" ${isToday?'style="background:var(--cream-dark)"':''}>
+      <td>${dateStr}${isToday?' <span style="font-size:10px;background:var(--orange);color:#fff;padding:1px 6px;border-radius:9px">วันนี้</span>':''}</td>
+      <td class="td-center"><input class="form-input sale-whole" data-d="${d}" type="number" value="${saved.whole}" min="0" style="width:70px;padding:4px 8px;text-align:center" oninput="recalcSalesRow(${d},${y},${m})"></td>
+      <td class="td-center"><input class="form-input sale-half" data-d="${d}" type="number" value="${saved.half}" min="0" style="width:70px;padding:4px 8px;text-align:center" oninput="recalcSalesRow(${d},${y},${m})"></td>
+      <td class="td-center"><input class="form-input sale-other" data-d="${d}" type="number" value="${saved.other}" min="0" style="width:70px;padding:4px 8px;text-align:center" oninput="recalcSalesRow(${d},${y},${m})"></td>
+      <td class="td-right sale-rev-${d}">—</td>
+      <td class="td-right sale-cost-${d}">—</td>
+      <td class="td-right sale-gp-${d}">—</td>
+      <td class="td-right sale-gpm-${d}">—</td>
+    </tr>`;
+  }
+  tbody.innerHTML = rows;
+  // recalc all rows
+  for(let d=1;d<=days;d++) recalcSalesRow(d,y,m);
+}
+
+function recalcSalesRow(d,y,m){
+  const {salePrice, totalCostUnit} = getComputedCosts();
+  const whole = +document.querySelector(`.sale-whole[data-d="${d}"]`)?.value||0;
+  const half  = +document.querySelector(`.sale-half[data-d="${d}"]`)?.value||0;
+  const other = +document.querySelector(`.sale-other[data-d="${d}"]`)?.value||0;
+
+  const key = salesKey(y,m,d);
+  salesData[key] = {whole,half,other};
+
+  const rev  = whole*salePrice + half*salePrice*0.55 + other*salePrice*0.30;
+  const cost = (whole + half*0.5 + other*0.3)*totalCostUnit;
+  const gp   = rev - cost;
+  const gpm  = rev>0 ? gp/rev : 0;
+
+  const set = (cls,val) => { const el = document.querySelector('.'+cls); if(el) el.textContent=val; };
+  const s = (cls,v) => { const el = document.querySelector(`.${cls}`); if(el) el.textContent=v; };
+  const rev_el = document.querySelector(`.sale-rev-${d}`);
+  const cost_el = document.querySelector(`.sale-cost-${d}`);
+  const gp_el  = document.querySelector(`.sale-gp-${d}`);
+  const gpm_el = document.querySelector(`.sale-gpm-${d}`);
+  if(rev_el) rev_el.textContent = fmt(rev);
+  if(cost_el) cost_el.textContent = fmt(cost);
+  if(gp_el){ gp_el.textContent = fmt(gp); gp_el.style.color = gp>=0?'var(--success)':'var(--danger)'; }
+  if(gpm_el) gpm_el.textContent = pct(gpm);
+
+  recalcSalesTotals(y,m);
+}
+
+function recalcSalesTotals(y,m){
+  const {salePrice, totalCostUnit} = getComputedCosts();
+  const days = daysInMonth(y,m);
+  let tRev=0,tCost=0;
+  for(let d=1;d<=days;d++){
+    const key=salesKey(y,m,d);
+    const sv=salesData[key]||{whole:0,half:0,other:0};
+    tRev  += sv.whole*salePrice + sv.half*salePrice*0.55 + sv.other*salePrice*0.3;
+    tCost += (sv.whole+sv.half*0.5+sv.other*0.3)*totalCostUnit;
+  }
+  const tGp=tRev-tCost;
+  const tGpm=tRev>0?tGp/tRev:0;
+  document.getElementById('st-rev').textContent  = fmt(tRev)+' บาท';
+  document.getElementById('st-cost').textContent = fmt(tCost)+' บาท';
+  document.getElementById('st-gp').textContent   = fmt(tGp)+' บาท';
+  document.getElementById('st-gpm').textContent  = pct(tGpm);
+  document.getElementById('sm-rev').textContent  = fmt(tRev);
+  document.getElementById('sm-cost').textContent = fmt(tCost);
+  document.getElementById('sm-gp').textContent   = fmt(tGp);
+  document.getElementById('sm-gpm').textContent  = pct(tGpm);
+}
+
+// ══════════════════════════════════════════════════════
+// P&L PAGE
+// ══════════════════════════════════════════════════════
+let chartPL = null;
+function recalcPL(){
+  const m = +document.getElementById('s-month').value;
+  const y = +document.getElementById('s-year').value;
+  const days = daysInMonth(y,m);
+  const {salePrice,totalCostUnit,matTotal,ovhUnit,ovhDayTotal} = getComputedCosts();
+  const {perDay} = getVals();
+
+  let tRev=0, tWhole=0;
+  for(let d=1;d<=days;d++){
+    const key=salesKey(y,m,d);
+    const sv=salesData[key]||{whole:0,half:0,other:0};
+    tWhole += sv.whole + sv.half*0.5 + sv.other*0.3;
+    tRev   += sv.whole*salePrice + sv.half*salePrice*0.55 + sv.other*salePrice*0.3;
+  }
+  const tMat  = tWhole * matTotal;
+  const tOvh  = ovhDayTotal * days;
+  const tCost = tMat + tOvh;
+  const tGp   = tRev - tCost;
+  const tGpm  = tRev>0 ? tGp/tRev : 0;
+  const extra1 = +document.getElementById('pl-extra1').value||0;
+  const extra2 = +document.getElementById('pl-extra2').value||0;
+  const tNp   = tGp - extra1 - extra2;
+  const tNpm  = tRev>0 ? tNp/tRev : 0;
+  const beUnits = totalCostUnit>0 ? ovhDayTotal/matTotal : 0;
+
+  document.getElementById('pl-revenue').textContent = fmt(tRev)+' บาท';
+  document.getElementById('pl-mat').textContent = fmt(tMat)+' บาท';
+  document.getElementById('pl-ovh').textContent = fmt(tOvh)+' บาท';
+  document.getElementById('pl-totalCost').textContent = '('+fmt(tCost)+') บาท';
+  document.getElementById('pl-gp').textContent = fmt(tGp)+' บาท';
+  document.getElementById('pl-gpm').textContent = pct(tGpm);
+  document.getElementById('pl-np').textContent = fmt(tNp)+' บาท';
+  document.getElementById('pl-npm').textContent = pct(tNpm);
+  document.getElementById('pl-daily').textContent = fmt(tNp/days)+' บาท';
+  document.getElementById('pl-be').textContent = fmtDec(ovhDayTotal/matTotal,1)+' ตัว';
+
+  // mini chart
+  const ctx = document.getElementById('chartPL').getContext('2d');
+  if(chartPL) chartPL.destroy();
+  chartPL = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['ยอดขาย','ต้นทุน','กำไรขั้นต้น','กำไรสุทธิ'],
+      datasets:[{data:[tRev,tCost,tGp,tNp],
+        backgroundColor:['#E8650A','#C62828','#2E7D32','#1565C0'],
+        borderRadius:6}]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{y:{ticks:{callback:v=>fmt(v)}},x:{ticks:{font:{size:11}}}}
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════
+let chartSales=null, chartCost=null;
+function renderDashboard(){
+  const now = new Date();
+  const m = now.getMonth();
+  const y = now.getFullYear();
+  const days = daysInMonth(y,m);
+  const {salePrice,totalCostUnit,matTotal,ovhUnit,ovhDayTotal} = getComputedCosts();
+
+  const thMonths = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                    'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('dash-date-str').textContent = `สรุปประจำเดือน ${thMonths[m]} ${y+543}`;
+
+  let tRev=0,tWhole=0,tGp=0;
+  const dailyRev=[], dailyGp=[], labels=[];
+  for(let d=1;d<=days;d++){
+    const key=salesKey(y,m,d);
+    const sv=salesData[key]||{whole:0,half:0,other:0};
+    const rev = sv.whole*salePrice + sv.half*salePrice*0.55 + sv.other*salePrice*0.3;
+    const units = sv.whole+sv.half*0.5+sv.other*0.3;
+    const cost = units*matTotal + (d<=now.getDate()?ovhDayTotal:0);
+    const gp = rev - cost;
+    tRev += rev; tWhole += sv.whole; tGp += gp;
+    dailyRev.push(Math.round(rev));
+    dailyGp.push(Math.round(gp));
+    labels.push(d+'');
+  }
+  const tCostAll = tWhole*matTotal + ovhDayTotal*days;
+  const gpm = tRev>0 ? tGp/tRev : 0;
+  const extra1 = +document.getElementById('pl-extra1').value||0;
+  const extra2 = +document.getElementById('pl-extra2').value||0;
+  const netProfit = tGp - extra1 - extra2;
+
+  document.getElementById('dash-net-profit').textContent = fmt(netProfit);
+  document.getElementById('d-revenue').textContent = fmt(tRev);
+  document.getElementById('d-cost').textContent = fmt(tCostAll);
+  document.getElementById('d-chicken-sold').textContent = fmt(tWhole);
+  document.getElementById('d-gpm').textContent = pct(gpm);
+
+  // Sales chart
+  const ctx1 = document.getElementById('chartSales').getContext('2d');
+  if(chartSales) chartSales.destroy();
+  chartSales = new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[
+        {label:'ยอดขาย',data:dailyRev,backgroundColor:'rgba(232,101,10,0.75)',borderRadius:4,order:2},
+        {label:'กำไร',data:dailyGp,type:'line',borderColor:'#2E7D32',backgroundColor:'rgba(46,125,50,0.1)',
+         fill:true,tension:0.3,pointRadius:2,order:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{
+        x:{ticks:{autoSkip:true,maxTicksLimit:15,font:{size:10}}},
+        y:{ticks:{callback:v=>fmt(v),font:{size:10}}}
+      }
+    }
+  });
+
+  // Cost donut
+  const ctx2 = document.getElementById('chartCost').getContext('2d');
+  if(chartCost) chartCost.destroy();
+  const matPct = totalCostUnit>0 ? matTotal/totalCostUnit : 0;
+  const ovhPct = 1-matPct;
+  chartCost = new Chart(ctx2,{
+    type:'doughnut',
+    data:{
+      labels:['วัตถุดิบ','ทางอ้อม'],
+      datasets:[{data:[Math.round(matPct*100),Math.round(ovhPct*100)],
+        backgroundColor:['#E8650A','#7C4A1A'],borderWidth:0}]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.label+': '+c.parsed+'%'}}}
+    }
+  });
+  document.getElementById('cost-legend').innerHTML =
+    `<span style="display:flex;align-items:center;gap:4px;margin-bottom:4px"><span style="width:10px;height:10px;border-radius:2px;background:#E8650A;display:inline-block"></span>วัตถุดิบ ${Math.round(matPct*100)}%</span>
+     <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#7C4A1A;display:inline-block"></span>ทางอ้อม ${Math.round(ovhPct*100)}%</span>`;
+
+  // Breakdown
+  const {perDay} = getVals();
+  document.getElementById('dash-breakdown').innerHTML = `
+    <div class="breakdown-item"><span class="breakdown-label">ต้นทุนวัตถุดิบ/ตัว</span><span class="breakdown-val">${fmtDec(matTotal)} บาท</span></div>
+    <div class="breakdown-item"><span class="breakdown-label">ต้นทุนทางอ้อม/ตัว</span><span class="breakdown-val">${fmtDec(ovhUnit)} บาท</span></div>
+    <div class="breakdown-item"><span class="breakdown-label">ต้นทุนรวม/ตัว</span><span class="breakdown-val" style="color:var(--danger)">${fmtDec(totalCostUnit)} บาท</span></div>
+    <div class="breakdown-item"><span class="breakdown-label">ราคาขาย/ตัว</span><span class="breakdown-val" style="color:var(--orange)">${fmtDec(salePrice)} บาท</span></div>
+    <div class="breakdown-item"><span class="breakdown-label">กำไร/ตัว</span><span class="breakdown-val" style="color:var(--success)">${fmtDec(salePrice-totalCostUnit)} บาท</span></div>
+  `;
+
+  // Goals
+  const targetPerDay = perDay;
+  const avgSoldPerDay = tWhole>0 ? tWhole/now.getDate() : 0;
+  const goalPct = targetPerDay>0 ? Math.min(avgSoldPerDay/targetPerDay,1) : 0;
+  document.getElementById('dash-goals').innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="color:var(--text-mid)">ยอดขายเฉลี่ย/วัน</span><span style="font-weight:600">${fmtDec(avgSoldPerDay,1)} / ${targetPerDay} ตัว</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.round(goalPct*100)}%"></div></div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">${Math.round(goalPct*100)}% ของเป้าหมาย</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="color:var(--text-mid)">กำไรขั้นต้น</span><span style="font-weight:600">${fmt(tGp)} บาท</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(Math.round(gpm*100),100)}%;background:var(--success)"></div></div>
+      <div style="font-size:11px;color:var(--text-light);margin-top:4px">Gross margin ${pct(gpm)}</div>
+    </div>
+  `;
+
+  // Tips
+  const tips = [];
+  if(gpm < 0.25) tips.push({t:'⚠️ Margin ต่ำ', d:'อัตรากำไรต่ำกว่า 25% พิจารณาปรับราคาขายหรือลดต้นทุน'});
+  if(avgSoldPerDay < targetPerDay*0.7) tips.push({t:'📉 ยอดขายต่ำ', d:'ยอดขายเฉลี่ยต่ำกว่าเป้า พิจารณาโปรโมชั่นหรือช่องทางขายใหม่'});
+  if(gpm >= 0.30) tips.push({t:'✅ กำไรดี!', d:'อัตรากำไรอยู่ในระดับดี ควรรักษาคุณภาพไว้'});
+  if(tips.length===0) tips.push({t:'💡 เคล็ดลับ', d:'กรอกข้อมูลยอดขายรายวันใน "บันทึกยอดขาย" เพื่อดูสถิติที่แม่นยำขึ้น'});
+  document.getElementById('dash-tips').innerHTML = tips.map(t=>
+    `<div class="alert ${t.t.includes('⚠️')||t.t.includes('📉')?'alert-warning':'alert-success'}" style="margin-bottom:8px">
+      <div><strong>${t.t}</strong><br><span style="font-size:12px">${t.d}</span></div>
+    </div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════
+(function init(){
+  const now = new Date();
+  // topbar date
+  const days_th=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+  const months_th=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('topbar-date').textContent =
+    `วัน${days_th[now.getDay()]} ${now.getDate()} ${months_th[now.getMonth()]} ${now.getFullYear()+543}`;
+
+  // year selector
+  const ySel = document.getElementById('s-year');
+  for(let y=now.getFullYear()-1; y<=now.getFullYear()+1; y++){
+    const opt = document.createElement('option');
+    opt.value=y; opt.textContent=y+543;
+    if(y===now.getFullYear()) opt.selected=true;
+    ySel.appendChild(opt);
+  }
+  document.getElementById('s-month').value = now.getMonth();
+
+  buildCostTable();
+  buildSalesTable();
+  renderDashboard();
+})();
+</script>
+</body>
+</html>

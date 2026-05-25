@@ -329,6 +329,14 @@ tr:hover td { background: var(--cream); }
 .auth-box input{ width:100%; padding:10px; margin-top:10px; border:1px solid var(--border); border-radius:8px; }
 .auth-box button{ margin-top:12px; padding:10px 16px; border-radius:8px; background:var(--orange); color:#fff; border:none; cursor:pointer; }
 
+/* Bottom navigation (mobile) */
+.bottom-nav{ display:none; position:fixed; left:0; right:0; bottom:0; height:62px; background:#fff; border-top:1px solid var(--border); display:flex; z-index:900; }
+.bn-item{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px; color:var(--text-mid); border:none; background:transparent; cursor:pointer; }
+.bn-item span{display:block}
+.bn-item .bn-label{font-size:11px;margin-top:4px}
+.bn-item.active{ color:var(--orange); font-weight:700 }
+@media (max-width:1000px){ .bottom-nav{ display:flex; } .content{ padding-bottom:80px; } }
+
 </style>
 </head>
 <body>
@@ -350,6 +358,9 @@ tr:hover td { background: var(--cream); }
     </div>
     <div class="nav-item" onclick="goto('order',this)">
       <span class="ico">🛒</span> รายการสั่งซื้อ
+    </div>
+    <div class="nav-item" onclick="goto('today',this)">
+      <span class="ico">🧾</span> ออร์เดอร์วันนี้
     </div>
     <div class="nav-item" onclick="goto('sales',this)">
       <span class="ico">📋</span> บันทึกยอดขาย
@@ -549,6 +560,25 @@ tr:hover td { background: var(--cream); }
       </div>
     </div>
 
+    <!-- ════════ PAGE: TODAY ORDERS ════════ -->
+    <div class="page" id="page-today">
+      <div class="section-hdr gap-24">
+        <div><h2>ออร์เดอร์วันนี้</h2><p>บันทึกรายการลูกค้าวันนี้ (ช่องไม่บังคับ)</p></div>
+        <button class="btn btn-primary" onclick="showAddOrder()">➕ เพิ่มรายการ</button>
+      </div>
+      <div class="card">
+        <div class="card-title">ฟอร์มเพิ่มออร์เดอร์</div>
+        <div id="today-form" style="display:none">
+          <div class="form-group"><label class="form-label">ชื่อ</label><input class="form-input" id="t-name" placeholder="ชื่อ (ไม่จำเป็น)"></div>
+          <div class="form-group"><label class="form-label">เบอร์โทร</label><input class="form-input" id="t-phone" inputmode="tel" placeholder="เบอร์โทร (ไม่จำเป็น)"></div>
+          <div class="form-group"><label class="form-label">รายการ / จำนวน</label><input class="form-input" id="t-items" placeholder="ตัวอย่าง: ไก่ทั้งตัว x2"></div>
+          <div class="form-group"><label class="form-label">หมายเหตุ</label><input class="form-input" id="t-note" placeholder="(ไม่จำเป็น)"></div>
+          <div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="addTodayOrder()">บันทึก</button><button class="btn btn-secondary" onclick="hideAddOrder()">ยกเลิก</button></div>
+        </div>
+        <div style="margin-top:12px"><h3 style="font-size:13px;margin-bottom:8px">รายการวันนี้</h3><div id="today-list"></div></div>
+      </div>
+    </div>
+
     <!-- ════════ PAGE: SALES ════════ -->
     <div class="page" id="page-sales">
       <div class="section-hdr gap-24">
@@ -669,6 +699,14 @@ tr:hover td { background: var(--cream); }
   </div><!-- /content -->
 </div><!-- /main -->
 
+<nav class="bottom-nav" aria-label="mobile navigation">
+  <button class="bn-item active" onclick="goto('dashboard', this)"><span>📊</span><span class="bn-label">แดชบอร์ด</span></button>
+  <button class="bn-item" onclick="goto('today', this)"><span>🧾</span><span class="bn-label">ออร์เดอร์</span></button>
+  <button class="bn-item" onclick="goto('sales', this)"><span>📋</span><span class="bn-label">ยอดขาย</span></button>
+  <button class="bn-item" onclick="goto('cost', this)"><span>💰</span><span class="bn-label">ต้นทุน</span></button>
+  <button class="bn-item" onclick="goto('pl', this)"><span>📈</span><span class="bn-label">สรุป</span></button>
+</nav>
+
 <script>
 // ══════════════════════════════════════════════════════
 // DATA
@@ -697,6 +735,7 @@ const overheads = [
 ];
 
 let salesData = {}; // { 'YYYY-M-D': {whole, half, other} }
+let ordersToday = []; // {id, name, phone, items, note, ts}
 
 const fmt = n => Math.round(n).toLocaleString('th-TH');
 const fmtDec = (n,d=2) => Number(n).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -707,14 +746,20 @@ const pct = n => (n*100).toFixed(1)+'%';
 // ══════════════════════════════════════════════════════
 const pageTitles = {
   dashboard:'แดชบอร์ด', cost:'ต้นทุนวัตถุดิบ',
-  order:'รายการสั่งซื้อ', sales:'บันทึกยอดขาย', pl:'กำไร-ขาดทุน'
+  order:'รายการสั่งซื้อ', today:'ออร์เดอร์วันนี้', sales:'บันทึกยอดขาย', pl:'กำไร-ขาดทุน'
 };
 function goto(id, el) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  el.classList.add('active');
-  document.getElementById('topbar-title').textContent = pageTitles[id];
+  document.querySelectorAll('.bn-item').forEach(n=>n.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if(page) page.classList.add('active');
+  if(el) el.classList.add('active');
+  // bottom nav mapping
+  const bnMap = {dashboard:0,today:1,sales:2,cost:3,pl:4,order:2};
+  const idx = bnMap[id];
+  if(typeof idx !== 'undefined'){ const bn = document.querySelectorAll('.bn-item')[idx]; if(bn) bn.classList.add('active'); }
+  document.getElementById('topbar-title').textContent = pageTitles[id] || document.getElementById('topbar-title').textContent;
   if(id==='dashboard') renderDashboard();
   if(id==='order') recalcOrder();
   if(id==='pl') recalcPL();
@@ -1118,6 +1163,39 @@ function renderDashboard(){
 }
 
 // ══════════════════════════════════════════════════════
+// TODAY ORDERS (simple client-side list)
+// ══════════════════════════════════════════════════════
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function renderTodayOrders(){
+  const wrap = document.getElementById('today-list'); if(!wrap) return;
+  if(ordersToday.length===0){ wrap.innerHTML = '<div style="color:var(--text-light)">ยังไม่มีรายการวันนี้</div>'; return; }
+  wrap.innerHTML = ordersToday.slice().reverse().map(o=>`
+    <div style="padding:10px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+      <div style="flex:1">
+        <div style="font-weight:600">${o.name||'(ไม่ระบุ)'}</div>
+        <div style="font-size:13px;color:var(--text-light)">${o.phone?o.phone:''} ${o.items?'- '+o.items:''}</div>
+        <div style="font-size:12px;color:var(--text-light)">${o.note?o.note:''}</div>
+      </div>
+      <div style="margin-left:12px;text-align:right"><button class="btn btn-sm btn-secondary" onclick="deleteTodayOrder('${o.id}')">ลบ</button></div>
+    </div>
+  `).join('');
+}
+function showAddOrder(){ const f = document.getElementById('today-form'); if(f) f.style.display='block'; document.getElementById('t-name')?.focus(); }
+function hideAddOrder(){ const f = document.getElementById('today-form'); if(f) f.style.display='none'; }
+function addTodayOrder(){
+  const name = document.getElementById('t-name').value.trim();
+  const phone = document.getElementById('t-phone').value.trim();
+  const items = document.getElementById('t-items').value.trim();
+  const note = document.getElementById('t-note').value.trim();
+  if(!name && !phone && !items && !note){ alert('กรุณากรอกข้อมูลอย่างน้อยหนึ่งช่อง'); return; }
+  const o = { id: uid(), name, phone, items, note, ts: Date.now() };
+  ordersToday.push(o);
+  hideAddOrder(); document.getElementById('t-name').value=''; document.getElementById('t-phone').value=''; document.getElementById('t-items').value=''; document.getElementById('t-note').value='';
+  renderTodayOrders(); scheduleSave();
+}
+function deleteTodayOrder(id){ ordersToday = ordersToday.filter(o=>o.id!==id); renderTodayOrders(); scheduleSave(); }
+
+// ══════════════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════════════
 (function init(){
@@ -1140,6 +1218,7 @@ function renderDashboard(){
         ingredients: ingredients.map((ing,i)=>({ name:ing.name, unit:ing.unit, qty: +document.querySelector(`.ing-qty[data-i="${i}"]`)?.value || ing.qty, price: +document.querySelector(`.ing-price[data-i="${i}"]`)?.value || ing.price })),
         overheads: overheads.map((o,i)=>({ name:o.name, daily: +document.querySelector(`.ovh-daily[data-i="${i}"]`)?.value || o.daily })),
         salesData: salesData,
+        ordersToday: ordersToday,
         settings: {
           perRound: +document.getElementById('c-perRound').value||0,
           rounds: +document.getElementById('c-rounds').value||0,
@@ -1165,6 +1244,7 @@ function renderDashboard(){
       if(st.ingredients){ st.ingredients.forEach((si,i)=>{ if(ingredients[i]){ ingredients[i].qty = si.qty; ingredients[i].price = si.price; } else ingredients.push(si); }); }
       if(st.overheads){ st.overheads.forEach((so,i)=>{ if(overheads[i]) overheads[i].daily = so.daily; else overheads.push(so); }); }
       if(st.salesData) salesData = st.salesData;
+      if(st.ordersToday) ordersToday = st.ordersToday;
       if(st.settings){
         document.getElementById('c-perRound').value = st.settings.perRound;
         document.getElementById('c-rounds').value = st.settings.rounds;
@@ -1209,11 +1289,12 @@ function renderDashboard(){
     buildCostTable();
     buildSalesTable();
     renderDashboard();
+    renderTodayOrders();
 
     // delegate input -> schedule save
     document.addEventListener('input', function(e){
       const t = e.target;
-      if(t && (t.matches('.ing-qty') || t.matches('.ing-price') || t.matches('.ovh-daily') || t.matches('.sale-whole') || t.matches('.sale-half') || t.matches('.sale-other') || t.id === 'c-perRound' || t.id === 'c-rounds' || t.id === 'c-margin' || t.id === 'o-days' || t.id === 'o-buffer' || t.id === 'pl-extra1' || t.id === 'pl-extra2')){
+      if(t && (t.matches('.ing-qty') || t.matches('.ing-price') || t.matches('.ovh-daily') || t.matches('.sale-whole') || t.matches('.sale-half') || t.matches('.sale-other') || t.id === 'c-perRound' || t.id === 'c-rounds' || t.id === 'c-margin' || t.id === 'o-days' || t.id === 'o-buffer' || t.id === 'pl-extra1' || t.id === 'pl-extra2' || t.id === 't-name' || t.id === 't-phone' || t.id === 't-items' || t.id === 't-note')){
         scheduleSave();
       }
     });

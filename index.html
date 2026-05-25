@@ -41,57 +41,10 @@ body {
   display: flex;
 }
 
-/* ── Sidebar ── */
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--brown);
-  min-height: 100vh;
-  position: fixed;
-  left: 0; top: 0;
-  display: flex; flex-direction: column;
-  z-index: 100;
-}
-.sidebar-logo {
-  padding: 28px 20px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-.sidebar-logo .icon { font-size: 32px; margin-bottom: 6px; }
-.sidebar-logo h1 { color: #fff; font-size: 16px; font-weight: 700; line-height: 1.3; }
-.sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 11px; font-weight: 300; margin-top: 2px; }
-.sidebar-nav { padding: 16px 0; flex: 1; }
-.nav-label {
-  color: rgba(255,255,255,0.35);
-  font-size: 10px; font-weight: 600;
-  letter-spacing: 1.2px; text-transform: uppercase;
-  padding: 8px 20px 4px;
-}
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 20px;
-  color: rgba(255,255,255,0.65);
-  font-size: 14px; font-weight: 400;
-  cursor: pointer;
-  transition: all .15s;
-  border-left: 3px solid transparent;
-}
-.nav-item:hover { color: #fff; background: rgba(255,255,255,0.07); }
-.nav-item.active {
-  color: #fff;
-  background: rgba(232,101,10,0.25);
-  border-left-color: var(--orange);
-  font-weight: 600;
-}
-.nav-item .ico { font-size: 18px; width: 22px; text-align: center; }
-.sidebar-footer {
-  padding: 16px 20px;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  color: rgba(255,255,255,0.4);
-  font-size: 11px;
-}
 
 /* ── Main ── */
 .main {
-  margin-left: var(--sidebar-w);
+  margin-left: 0;
   flex: 1;
   min-height: 100vh;
   display: flex; flex-direction: column;
@@ -330,48 +283,17 @@ tr:hover td { background: var(--cream); }
 .auth-box button{ margin-top:12px; padding:10px 16px; border-radius:8px; background:var(--orange); color:#fff; border:none; cursor:pointer; }
 
 /* Bottom navigation (mobile) */
-.bottom-nav{ display:none; position:fixed; left:0; right:0; bottom:0; height:62px; background:#fff; border-top:1px solid var(--border); display:flex; z-index:900; }
-.bn-item{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px; color:var(--text-mid); border:none; background:transparent; cursor:pointer; }
+.bottom-nav{ display:flex; position:fixed; left:0; right:0; bottom:0; height:62px; background:#fff; border-top:1px solid var(--border); z-index:900; }
+.bn-item{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:12px; color:var(--text-mid); border:none; background:transparent; cursor:pointer; padding:6px 4px; }
 .bn-item span{display:block}
 .bn-item .bn-label{font-size:11px;margin-top:4px}
 .bn-item.active{ color:var(--orange); font-weight:700 }
-@media (max-width:1000px){ .bottom-nav{ display:flex; } .content{ padding-bottom:80px; } }
+.content{ padding-bottom:80px; }
 
 </style>
 </head>
 <body>
 
-<!-- ── SIDEBAR ── -->
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <div class="icon">🐔</div>
-    <h1>ร้านไก่อบโอง</h1>
-    <p>ระบบบัญชีและต้นทุน</p>
-  </div>
-  <nav class="sidebar-nav">
-    <div class="nav-label">หลัก</div>
-    <div class="nav-item active" onclick="goto('dashboard',this)">
-      <span class="ico">📊</span> แดชบอร์ด
-    </div>
-    <div class="nav-item" onclick="goto('cost',this)">
-      <span class="ico">💰</span> ต้นทุน & วัตถุดิบ
-    </div>
-    <div class="nav-item" onclick="goto('order',this)">
-      <span class="ico">🛒</span> รายการสั่งซื้อ
-    </div>
-    <div class="nav-item" onclick="goto('today',this)">
-      <span class="ico">🧾</span> ออร์เดอร์วันนี้
-    </div>
-    <div class="nav-item" onclick="goto('sales',this)">
-      <span class="ico">📋</span> บันทึกยอดขาย
-    </div>
-    <div class="nav-label">สรุป</div>
-    <div class="nav-item" onclick="goto('pl',this)">
-      <span class="ico">📈</span> กำไร-ขาดทุน
-    </div>
-  </nav>
-  <div class="sidebar-footer">v1.0 · ร้านไก่อบโอง</div>
-</aside>
 
 <!-- ── MAIN ── -->
 <div class="main">
@@ -570,6 +492,7 @@ tr:hover td { background: var(--cream); }
           <button class="btn btn-secondary" onclick="showImportDialog()">⬆️ นำเข้า</button>
         </div>
       </div>
+      <div class="alert alert-warning" style="margin-bottom:12px">หมายเหตุ: ฟีเจอร์ซิงก์หลายอุปกรณ์ยังไม่พร้อม — รายการจะเก็บได้เฉพาะเครื่องนี้เท่านั้น</div>
       <div class="card">
         <div class="card-title">ฟอร์มเพิ่มออร์เดอร์</div>
         <div id="today-form" style="display:none">
@@ -1249,7 +1172,6 @@ function importFromText(){
     `วัน${days_th[now.getDay()]} ${now.getDate()} ${months_th[now.getMonth()]} ${now.getFullYear()+543}`;
 
   const STORAGE_KEY = 'chickenShop_v1';
-  const AUTH_USER = 'ร้านไก่อบโอง';
   let saveTimer = null;
 
   function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 800); }
@@ -1303,20 +1225,6 @@ function importFromText(){
     }catch(e){ console.warn('Load failed', e); }
   }
 
-  function showAuth(){
-    if(localStorage.getItem('chickenShopUser')===AUTH_USER) return startApp();
-    const ov = document.createElement('div'); ov.className = 'auth-overlay';
-    ov.innerHTML = `<div class="auth-box"><h3>เข้าสู่ระบบ</h3><p>กรุณาใส่ชื่อผู้ใช้เพื่อเข้าถึงระบบ</p><input id="auth-input" placeholder="ชื่อผู้ใช้"><label style="display:block;margin-top:8px;font-size:14px"><input type="checkbox" id="auth-remember"> จำไว้ในอุปกรณ์นี้</label><button id="auth-btn">เข้าสู่ระบบ</button></div>`;
-    document.body.appendChild(ov);
-    document.getElementById('auth-btn').onclick = function(){
-      const v = document.getElementById('auth-input').value.trim();
-      const rem = document.getElementById('auth-remember').checked;
-      if(v === AUTH_USER){ if(rem) localStorage.setItem('chickenShopUser', AUTH_USER); ov.remove(); startApp(); }
-      else alert('ชื่อผู้ใช้ไม่ถูกต้อง');
-    };
-    document.getElementById('auth-input').addEventListener('keyup', function(e){ if(e.key === 'Enter') document.getElementById('auth-btn').click(); });
-  }
-
   function startApp(){
     // year selector
     const ySel = document.getElementById('s-year');
@@ -1350,8 +1258,8 @@ function importFromText(){
     window.addEventListener('beforeunload', saveState);
   }
 
-  // start with auth
-  showAuth();
+  // start app directly (no login)
+  startApp();
 })();
 </script>
 </body>

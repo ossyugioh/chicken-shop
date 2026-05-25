@@ -564,7 +564,11 @@ tr:hover td { background: var(--cream); }
     <div class="page" id="page-today">
       <div class="section-hdr gap-24">
         <div><h2>ออร์เดอร์วันนี้</h2><p>บันทึกรายการลูกค้าวันนี้ (ช่องไม่บังคับ)</p></div>
-        <button class="btn btn-primary" onclick="showAddOrder()">➕ เพิ่มรายการ</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn btn-primary" onclick="showAddOrder()">➕ เพิ่มรายการ</button>
+          <button class="btn btn-secondary" onclick="exportOrders()">⬇️ ส่งออก</button>
+          <button class="btn btn-secondary" onclick="showImportDialog()">⬆️ นำเข้า</button>
+        </div>
       </div>
       <div class="card">
         <div class="card-title">ฟอร์มเพิ่มออร์เดอร์</div>
@@ -698,6 +702,18 @@ tr:hover td { background: var(--cream); }
 
   </div><!-- /content -->
 </div><!-- /main -->
+
+<div id="import-overlay" class="auth-overlay" style="display:none">
+  <div class="auth-box">
+    <h3>นำเข้าออเดอร์</h3>
+    <p>วาง JSON ที่คัดลอกจากเครื่องอื่น แล้วกดนำเข้า</p>
+    <textarea id="import-text" style="width:100%;height:140px;padding:8px;border:1px solid var(--border);border-radius:8px"></textarea>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary" onclick="importFromText()">นำเข้า</button>
+      <button class="btn btn-secondary" onclick="hideImportDialog()">ยกเลิก</button>
+    </div>
+  </div>
+</div>
 
 <nav class="bottom-nav" aria-label="mobile navigation">
   <button class="bn-item active" onclick="goto('dashboard', this)"><span>📊</span><span class="bn-label">แดชบอร์ด</span></button>
@@ -1194,6 +1210,32 @@ function addTodayOrder(){
   renderTodayOrders(); scheduleSave();
 }
 function deleteTodayOrder(id){ ordersToday = ordersToday.filter(o=>o.id!==id); renderTodayOrders(); scheduleSave(); }
+
+function exportOrders(){
+  try{
+    const payload = JSON.stringify({ordersToday: ordersToday, ts: Date.now()});
+    if(navigator.clipboard){ navigator.clipboard.writeText(payload).then(()=>alert('คัดลอกออเดอร์ไปยังคลิปบอร์ดแล้ว — วางบนอุปกรณ์อื่นและกด นำเข้า')); }
+    const blob = new Blob([payload], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download='chicken-orders.json'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+  }catch(e){ alert('ส่งออกไม่สำเร็จ: '+e.message); }
+}
+
+function showImportDialog(){ const el = document.getElementById('import-overlay'); if(el) el.style.display='flex'; document.getElementById('import-text').value=''; document.getElementById('import-text').focus(); }
+function hideImportDialog(){ const el = document.getElementById('import-overlay'); if(el) el.style.display='none'; }
+
+function importFromText(){
+  const txt = document.getElementById('import-text').value.trim();
+  if(!txt){ alert('วาง JSON ก่อน'); return; }
+  try{
+    const obj = JSON.parse(txt);
+    const incoming = obj.ordersToday || obj.orders || [];
+    let added = 0;
+    incoming.forEach(o=>{ if(!ordersToday.find(x=>x.id===o.id)){ ordersToday.push(o); added++; } });
+    renderTodayOrders(); scheduleSave(); hideImportDialog();
+    alert('นำเข้าเรียบร้อย เพิ่ม '+added+' รายการ');
+  }catch(e){ alert('JSON ไม่ถูกต้อง: '+e.message); }
+}
 
 // ══════════════════════════════════════════════════════
 // INIT
